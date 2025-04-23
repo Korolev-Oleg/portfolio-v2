@@ -35,7 +35,7 @@ onMounted(() => {
     <div class="row">
       <p>{{_('connect-title')}}</p>
       <div class="icons">
-        <a href="https://t.me/hustncn" target="_blank">
+        <a href="https://t.me/okorolev_dev" target="_blank">
           <Telegram/>
         </a>
         <a href="http://github.com/korolev-oleg" target="_blank">

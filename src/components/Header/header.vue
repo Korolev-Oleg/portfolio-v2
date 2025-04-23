@@ -1,8 +1,8 @@
 <script setup>
 import '@/components/Header/css/header.css';
 
-import ProfilePhoto1 from "@/components/Header/asserts/profilePhoto1.png";
-import ProfilePhoto2 from "@/components/Header/asserts/profilePhoto2.png";
+import ProfilePhoto1 from "@/components/Header/asserts/profilePhoto1.webp";
+import ProfilePhoto2 from "@/components/Header/asserts/profilePhoto2.webp";
 import PythonIcon2 from "@/components/Header/icons/PythonIcon2.vue";
 import FastAPIicon from "@/components/Header/icons/FastAPIicon.vue";
 import DjangoIcon from "@/components/Header/icons/DjangoIcon.vue";
@@ -81,7 +81,7 @@ onMounted(() => {
         <div class="hidden-container">
           <span id="name-hidden"></span>
           <div class="hidden-socials">
-            <a class="h-telegram hidden" href="https://t.me/hustncn" target="_blank">
+            <a class="h-telegram hidden" href="https://t.me/okorolev_dev" target="_blank">
               <Telegram/>
             </a>
             <a class="h-github hidden" href="https://github.com/korolev-oleg" target="_blank">
