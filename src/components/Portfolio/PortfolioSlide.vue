@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted} from 'vue';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import {portfolioAnchorsList} from "@/store/global.js";
@@ -7,92 +7,84 @@ import {portfolioAnchorsList} from "@/store/global.js";
 gsap.registerPlugin(ScrollTrigger);
 
 const slideUniqueId = 'portfolio-slide-' + Math.random().toString(36).substring(2, 7);
-const descriptionId = "portfolio-description-" + Math.random().toString(36).substring(2, 7);
 const props = defineProps({
   images: Array,
   description: String,
-  maxHeight: String,
-  index: Number,
+  maxHeight: {
+    type: String,
+    default: '80vh',
+  },
 });
 
-if (!props.maxHeight) props.maxHeight = '80vh'
-
-const getImgWidth = () => {
-  let width = window.innerWidth
-  let height = window.innerHeight
-  if (height > width) {
-    return '90vw'
-  }
-}
+let animationContext
+const slideElement = ref(null)
+const formattedDescription = computed(() =>
+  (props.description || '').replace(/<br\s*\/?>/gi, '\n')
+)
 
 onMounted(() => {
-  const tl = gsap.timeline();
-  const slide = document.getElementById(slideUniqueId);
-  const media = gsap.matchMedia();
-
   portfolioAnchorsList.value.push("#" + slideUniqueId)
 
-  media.add({
-    isDesktop: `(min-width: 800px)`,
-    isMobile: `(max-width: 799px)`,
-  }, (context) => {
-    let {isDesktop, isMobile} = context.conditions
+  animationContext = gsap.context(() => {
+    const tl = gsap.timeline();
+    const slide = slideElement.value;
+    const slidesContainer = slide?.closest('.portfolio-slides-container');
+    const media = gsap.matchMedia();
 
-    let slides = document.getElementsByClassName('portfolio-slide')
-    let isLast = slides[slides.length - 1] === slide || slides[slides.length - 2] === slide
+    if (!slide || !slidesContainer) return
 
-    let currentSlides = slide.parentElement.getElementsByClassName('portfolio-slide')
-    let isLastCoverSlide = currentSlides[currentSlides.length - 1].id === slide.id
-    let end = isLastCoverSlide ? '65% 0%' : '100% 30%'
-    tl.fromTo(slide, {opacity: 0, x: 100}, {
-      scrollTrigger: {
-        trigger: slide,
-        start: isMobile ? 'top 13%' : 'top 5%',
-        end: isMobile ? '100% 30%' : end,
-        pinSpacing: isMobile || isLast,
-        scrub: 1,
-        pin: true,
-        // snap: {
-        //   snapTo: 0.5,
-        //   duration: 0.1
-        // }
+    media.add({
+      isDesktop: `(min-width: 800px)`,
+      isMobile: `(max-width: 799px)`,
+    }, (context) => {
+      const {isMobile} = context.conditions
+      const slides = document.getElementsByClassName('portfolio-slide')
+      const isLastSlide = slides[slides.length - 1] === slide
+      const currentSlides = slidesContainer.getElementsByClassName('portfolio-slide')
+      const isLastCoverSlide = currentSlides[currentSlides.length - 1].id === slide.id
+      const end = isLastCoverSlide ? '65% 0%' : '100% 30%'
 
-        // onEnterBack(){
-        //   slide.classList.remove('invisible')
-        // }
-      },
-      x: 0,
-      opacity: 3,
-    }, ">").to(slide, {opacity: 0, right: -100}, '>');
-  });
-
-  const descritpoin = document.getElementById(descriptionId);
-  descritpoin.innerHTML = descritpoin.innerText
+      tl.fromTo(slide, {opacity: 0, x: 100}, {
+        scrollTrigger: {
+          trigger: slide,
+          start: 'top top',
+          end: isMobile ? '100% 30%' : end,
+          pinSpacing: isMobile || isLastSlide,
+          scrub: 1,
+          pin: true,
+        },
+        x: 0,
+        opacity: 1,
+      }, ">").to(slide, {opacity: 0, right: -100}, '>');
+    });
+  })
 });
 
-
+onUnmounted(() => {
+  animationContext?.revert()
+  const index = portfolioAnchorsList.value.indexOf("#" + slideUniqueId)
+  if (index >= 0) portfolioAnchorsList.value.splice(index, 1)
+})
 </script>
 
 <template>
-  <div class="portfolio-slide" :id="slideUniqueId">
+  <div ref="slideElement" class="portfolio-slide" :id="slideUniqueId" data-portfolio-slide-snap>
     <div class="portfolio-slide__images">
-      <img v-for="(image, index) in props.images" :key="index" :src="image" alt="portfolio image"/>
+      <img v-for="(image, index) in props.images" :key="index" :src="image" :alt="`Case study screenshot ${index + 1}`"/>
     </div>
     <div class="portfolio-slide__description">
       <div class="container">
-        <p :id="descriptionId">{{ props.description }}</p>
+        <p>{{ formattedDescription }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-
-
 .portfolio-slide {
   display: flex;
   flex-direction: column;
-  justify-content: start;
+  justify-content: center;
   align-items: center;
   gap: 20px;
   height: 80vh;
@@ -105,20 +97,44 @@ onMounted(() => {
   background: black
 }
 
+.portfolio-slide__description {
+  color: white;
+  overflow-x: hidden;
+  line-height: 1.4;
+  white-space: pre-line;
+  width: min(88vw, 720px);
+}
+
+.portfolio-slide__description .container {
+  margin: 0;
+  max-width: none;
+  padding: 0;
+}
+
 @media (min-width: 768px) {
   .portfolio-slide {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(32px, 4vw, 80px);
+    padding-inline: clamp(24px, 4vw, 72px);
   }
 
   .portfolio-slide__images {
     display: flex;
-    justify-content: end;
+    flex: 0 1 auto;
+    justify-content: center;
   }
 
   .portfolio-slide__images img {
     max-width: 35vw;
     max-height: v-bind(maxHeight);
+  }
+
+  .portfolio-slide__description {
+    flex: 0 1 clamp(320px, 32vw, 720px);
+    width: clamp(320px, 32vw, 720px);
+    max-width: 100%;
   }
 
   *, *::before, *::after {
@@ -136,10 +152,16 @@ onMounted(() => {
   }
 }
 
-.portfolio-slide__description {
-  color: white;
-  overflow-x: hidden;
-  line-height: 1.4;
+.portfolio-slide > .portfolio-slide__images,
+.portfolio-slide > .portfolio-slide__description {
+  opacity: 1;
+  transition: opacity 80ms linear;
+  will-change: opacity;
+}
+
+.portfolio-slide--swiping-down > .portfolio-slide__images,
+.portfolio-slide--swiping-down > .portfolio-slide__description {
+  opacity: .35;
 }
 
 img {

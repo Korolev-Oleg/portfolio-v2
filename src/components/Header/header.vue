@@ -15,7 +15,7 @@ import Telegram from "@/components/Header/icons/telegram.vue";
 import Github from "@/components/Header/icons/github.vue";
 import Linkedin from "@/components/Header/icons/linkedin.vue";
 import {loader} from "@/store/global.js";
-import {onMounted, watch} from "vue";
+import {onMounted, onUnmounted, watch} from "vue";
 import TextPlugin from "gsap/TextPlugin";
 import gsap from 'gsap';
 import {executeHeaderAnimations} from "@/components/Header/animations/headerAnimations.js";
@@ -24,25 +24,31 @@ import {initTranslations} from "@/utils.js";
 const _ = initTranslations(translations)
 
 gsap.registerPlugin(TextPlugin);
+let animationContext
 
-watch(loader.isLoading, (isLoading) => {
-  executeHeaderAnimations()
+watch(() => loader.isLoading, (isLoading) => {
+  if (!isLoading) {
+    animationContext = gsap.context(() => executeHeaderAnimations())
+  }
 })
 
 onMounted(() => {
   window.scrollTo(0, 0);
 })
 
+onUnmounted(() => animationContext?.revert())
+
 </script>
 
 <template>
+  <a class="skip-link" href="#about">Skip to main content</a>
   <div class="head">
     <div class="container">
       <div class='flex'>
         <div class="photo">
           <div class="img-mask">
-            <img id='profile-photo' :src="ProfilePhoto1" alt="">
-            <img id='profile-photo-2' :src="ProfilePhoto2" alt="">
+            <img id='profile-photo' :src="ProfilePhoto1" alt="Oleg Korolev">
+            <img id='profile-photo-2' :src="ProfilePhoto2" alt="Oleg Korolev portrait">
           </div>
           <p id="image-title">FULLSTACK WEB DEVELOPER</p>
         </div>
@@ -80,20 +86,20 @@ onMounted(() => {
         </div>
         <div class="hidden-container">
           <span id="name-hidden"></span>
-          <div class="hidden-socials">
-            <a class="h-telegram hidden" href="https://t.me/okorolev_dev" target="_blank">
+          <div class="hidden-socials" aria-label="Social links">
+            <a class="h-telegram hidden" aria-label="Telegram" href="https://t.me/okorolev_dev" target="_blank" rel="noopener noreferrer">
               <Telegram/>
             </a>
-            <a class="h-github hidden" href="https://github.com/korolev-oleg" target="_blank">
+            <a class="h-github hidden" aria-label="GitHub" href="https://github.com/korolev-oleg" target="_blank" rel="noopener noreferrer">
               <Github/>
             </a>
-            <a class="h-linkedin hidden" href="https://www.linkedin.com/in/korolev-oleg" target="_blank">
+            <a class="h-linkedin hidden" aria-label="LinkedIn" href="https://www.linkedin.com/in/korolev-oleg" target="_blank" rel="noopener noreferrer">
               <Linkedin/>
             </a>
           </div>
         </div>
       </div>
-      <div id="name">{{ _('name') }}</div>
+      <h1 id="name">{{ _('name') }}</h1>
     </div>
   </div>
 </template>

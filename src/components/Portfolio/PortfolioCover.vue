@@ -1,8 +1,9 @@
 <script setup>
-import {onMounted} from 'vue';
+import {onMounted, onUnmounted} from 'vue';
 import gsap from 'gsap';
 import {generateID} from '@/utils.js';
 import ScrollTrigger from "gsap/ScrollTrigger";
+import TextPlugin from "gsap/TextPlugin";
 
 const titleId = generateID('cover-title')
 const coverUniqueID = generateID('cover')
@@ -10,25 +11,28 @@ const coverIconUniqueID = generateID('cover-icon')
 const slidesUniqueID = generateID('slides')
 const timeLineUniqueID = generateID('timeline')
 
-gsap.registerPlugin(ScrollTrigger)
+gsap.registerPlugin(ScrollTrigger, TextPlugin)
 
 const props = defineProps({
   Icon: Object,
   title: String,
+  autoTitle: Boolean,
 })
-onMounted(() => {
-  const tl = gsap.timeline()
-  const media = gsap.matchMedia()
 
-  tl.to('#' + coverUniqueID, {
-    scrollTrigger: {
-      trigger: '#' + coverUniqueID,
-      start: 'top top',
-      end: 'bottom bottom',
-      scrub: 1,
-    }
-  })
-      // show icon
+let animationContext
+
+onMounted(() => {
+  animationContext = gsap.context(() => {
+    const tl = gsap.timeline()
+
+    tl.to('#' + coverUniqueID, {
+      scrollTrigger: {
+        trigger: '#' + coverUniqueID,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1,
+      }
+    })
       .to('#' + coverIconUniqueID, {
         scrollTrigger: {
           trigger: '#' + coverUniqueID,
@@ -42,14 +46,33 @@ onMounted(() => {
           },
           onLeaveBack: () => {
             document.getElementById(timeLineUniqueID).style.display = 'none'
-            return document.getElementById(coverUniqueID).classList.remove('cover-fixed')
+            document.getElementById(coverUniqueID).classList.remove('cover-fixed')
           },
         },
         scale: 1,
         opacity: 1,
       })
-      // print title
-      .to(`#${titleId}`, {
+
+    if (props.autoTitle) {
+      const titleAnimation = gsap.to(`#${titleId}`, {
+        text: props.title,
+        duration: 1,
+        ease: 'power1.inOut',
+        paused: true,
+      })
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        titleAnimation.progress(1)
+      } else {
+        ScrollTrigger.create({
+          trigger: '#' + coverUniqueID,
+          start: 'center center',
+          once: true,
+          onEnter: () => titleAnimation.play(),
+        })
+      }
+    } else {
+      tl.to(`#${titleId}`, {
         scrollTrigger: {
           trigger: '#' + coverUniqueID,
           start: 'top 0',
@@ -59,92 +82,78 @@ onMounted(() => {
         text: props.title,
         duration: .1,
       }, '<')
+    }
 
-  // move logo with title to the top
-  const cover = document.getElementById(coverUniqueID)
-  const coverBg = cover.getElementsByClassName('cover-bg')[0]
-  const fixCoverBGX = () => {coverBg.style.transform = `translateX(${coverBg.offsetLeft * -1}px)`; console.log("fix")}
-  media.add({
-    isDesktop: `(min-width: 800px)`,
-    isMobile: `(max-width: 799px)`,
-  }, (context) => {
-    let {isDesktop, isMobile} = context.conditions;
+    const cover = document.getElementById(coverUniqueID)
+    const coverBg = cover.getElementsByClassName('cover-bg')[0]
+    const fixCoverBGX = () => {
+      coverBg.style.transform = `translateX(${coverBg.offsetLeft * -1}px)`
+    }
 
     tl.to('#' + coverUniqueID, {
-      minHeight: '10vh',
-      height: '10vh',
-      width: isMobile ? '220px' : '30vw',
+      minHeight: '100px',
+      height: '100px',
+      width: '100vw',
       scrollTrigger: {
         trigger: '#' + coverUniqueID,
         start: '1100px 90%',
         scrub: 1,
-        onLeave: (self) => {
-          fixCoverBGX()
-        },
-        onUpdate: (self) => {
-          fixCoverBGX()
-          // ScrollTrigger.refresh()
-        },
+        onLeave: fixCoverBGX,
+        onUpdate: fixCoverBGX,
       }
     }, '<')
-  })
-  tl.to('.portfolio-slide', {
-    scrollTrigger: {
-      trigger: '#' + coverUniqueID,
-      start: 'top top',
-      end: 'bottom bottom',
-      scrub: 1,
-    },
-    stagger: 1,
-  }, '<')
 
-
-
-  // fix logo cover
-  tl.to('#' + coverUniqueID, {
-    scrollTrigger: {
-      trigger: '.portfolio-slide',
-      start: 'top top',
-      end: 'bottom bottom',
-      onUpdate: () => {
-        fixCoverBGX()
+    tl.to('.portfolio-slide', {
+      scrollTrigger: {
+        trigger: '#' + coverUniqueID,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 1,
       },
-    },
-  })
+      stagger: 1,
+    }, '<')
 
-  // disable (logo with title) on the end of the slides
-  tl.to('#' + coverUniqueID, {
-    scrollTrigger: {
-      trigger: '#' + slidesUniqueID,
-      start: 'bottom 25%',
-      end: 'bottom 25%',
-      scrub: 1,
-    },
-    opacity: 0,
-  })
+    tl.to('#' + coverUniqueID, {
+      scrollTrigger: {
+        trigger: '.portfolio-slide',
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: fixCoverBGX,
+      },
+    })
 
+    tl.to('#' + coverUniqueID, {
+      scrollTrigger: {
+        trigger: '#' + slidesUniqueID,
+        start: 'bottom 25%',
+        end: 'bottom 25%',
+        scrub: 1,
+      },
+      opacity: 0,
+    })
+  })
 })
+
+onUnmounted(() => animationContext?.revert())
 </script>
 
 <template>
+  <div class="portfolio-snap-anchor" data-portfolio-cover-snap aria-hidden="true"></div>
   <div class="cover" :id="coverUniqueID">
-    <component :is="Icon" class="cover-icon" :id="coverIconUniqueID"/>
-    <p class="cover-title" :id="titleId"></p>
+    <component :is="Icon" class="cover-icon" :id="coverIconUniqueID" aria-hidden="true"/>
+    <h3 class="cover-title" :id="titleId"></h3>
     <div class="cover-bg"></div>
   </div>
   <div class="timeline" :id="timeLineUniqueID"></div>
   <div class="portfolio-slides-container" :id="slidesUniqueID">
-    <slot class="slot-cls"/>
-    <!--    <slot v-for="(slotContent, index) in $slots.default().length" :name="slotContent.name" :index="index" :total="totalSlots" :key="index" class="slot-cls"/>-->
-    <slot v-for="(slot, index) in $slots.default" :index="index"></slot>
+    <slot/>
   </div>
 </template>
 
 <style scoped>
-.slot-cls {
-  opacity: 0;
-  position: relative;
-  right: 100vw;
+.portfolio-snap-anchor {
+  height: 0;
+  width: 100%;
 }
 
 .timeline {
@@ -152,19 +161,14 @@ onMounted(() => {
   min-height: 100vh;
 }
 
-.cover-fixed {
+.cover.cover-fixed {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 100;
-  height: 100px;
-}
-
-@media (min-width: 800px) {
-  .cover-fixed {
-    transform: translateY(-2px);
-  }
+  width: 100vw !important;
+  transform: none !important;
 }
 
 .cover-icon {
@@ -172,9 +176,12 @@ onMounted(() => {
   width: 60px;
   scale: 0;
   opacity: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .cover {
+  position: relative;
   min-height: 102vh;
   display: flex;
   align-items: center;
@@ -185,17 +192,20 @@ onMounted(() => {
 
 .cover-bg {
   overflow-x: hidden;
-  width: 100vw;
-  height: 100px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: black;
   position: absolute;
-  z-index: -1;
+  z-index: 0;
 }
 
 .cover-title {
   color: #fff;
   font-size: 17px;
   font-weight: bold;
+  position: relative;
+  z-index: 1;
 }
 
 .active {

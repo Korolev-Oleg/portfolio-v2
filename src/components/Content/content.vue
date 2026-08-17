@@ -2,14 +2,13 @@
 import translations from '@/translations/aboutTranslations.json';
 import {loader} from "@/store/global.js";
 import gsap from 'gsap';
-import {watch} from "vue";
+import {onUnmounted, watch} from "vue";
 import TextPlugin from "gsap/TextPlugin";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import {initTranslations} from "@/utils.js";
 import {executeContentAnimations} from "@/components/Content/animations/contentAnimations.js";
 
 const _ = initTranslations(translations)
-
 
 gsap.registerPlugin(TextPlugin)
 gsap.registerPlugin(ScrollTrigger);
@@ -18,12 +17,15 @@ const toSpace = (str) => {
   return str.replace(/[\w\W]/g, '‎ ');
 }
 
+let animationContext
 
-watch(loader.isLoading, (isLoading) => {
-  executeContentAnimations()
+watch(() => loader.isLoading, (isLoading) => {
+  if (!isLoading) {
+    animationContext = gsap.context(() => executeContentAnimations())
+  }
 })
 
-
+onUnmounted(() => animationContext?.revert())
 </script>
 <template>
   <section id="about">
@@ -50,10 +52,6 @@ p {
   font-size: 16px;
   margin: 25px 0;
   display: block;
-}
-
-#about-2022-2024 {
-  min-height: 230px;
 }
 
 .text {

@@ -1,6 +1,6 @@
 <script setup>
 import {onMounted} from 'vue';
-import translationStore, {loadingProgress} from '@/store/global.js';
+import translationStore from '@/store/global.js';
 import {loadResources, syncLocale} from '@/utils.js';
 
 import LoadingScreen from "@/components/Service/LoadingScreen.vue";
@@ -12,8 +12,8 @@ import Footer from "@/components/Footer/footer.vue";
 import Header from "@/components/Header/header.vue";
 
 
-onMounted(() => {
-  loadResources(loadingProgress)
+onMounted(async () => {
+  await loadResources()
   syncLocale(translationStore);
   window.scrollTo(0, 0);
 

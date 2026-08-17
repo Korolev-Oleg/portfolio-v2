@@ -1,32 +1,34 @@
 #!/usr/bin/env bash
-if git show-ref --quiet refs/heads/gh-pages; then
-  git branch -D gh-pages
-  echo "deleted branch gh-pages"
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$repo_root"
+
+npm ci
+npm run build
+
+deploy_dir="$(mktemp -d)"
+cleanup() {
+  git worktree remove --force "$deploy_dir" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+git fetch origin gh-pages || true
+if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+  git worktree add --detach "$deploy_dir" origin/gh-pages
+else
+  git worktree add --detach "$deploy_dir" HEAD
 fi
 
-git push origin --delete gh-pages
-echo "deleted remote branch gh-pages"
+find "$deploy_dir" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+cp -R dist/. "$deploy_dir"/
+git -C "$deploy_dir" add --all
 
-git checkout -b gh-pages
-echo "created branch gh-pages"
-wait 5
+if git -C "$deploy_dir" diff --cached --quiet; then
+  echo "No deployment changes."
+  exit 0
+fi
 
-echo "start building"
-
-npm install
-npm run build
-echo "build completed"
-wait 5
-
-echo "start deploying"
-find . -mindepth 1 -maxdepth 1 ! -name 'dist' ! -name '.git' ! -name 'node_modules' ! -name '.idea' ! -name '.gitignore' -exec git rm --cached -r {} +
-find . -mindepth 1 -maxdepth 1 ! -name 'dist' ! -name '.git' ! -name 'node_modules' ! -name '.idea' ! -name '.gitignore' -exec rm -rf {} +
-cp -r ./dist/* .
-
-# shellcheck disable=SC2035
-git add *
-git commit -m 'update gh-pages'
-git push origin gh-pages
-git checkout main
-git reset --hard
-echo "deployed finished"
+git -C "$deploy_dir" commit -m 'update gh-pages'
+git -C "$deploy_dir" push origin HEAD:gh-pages --force-with-lease
+echo "Deployment complete."

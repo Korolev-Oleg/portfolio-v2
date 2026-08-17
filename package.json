@@ -8,6 +8,16 @@
     "build": "vite build",
     "preview": "vite preview"
   },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Edge versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 iOS versions",
+    "last 2 Opera versions",
+    "Firefox ESR",
+    "not dead"
+  ],
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/vue-fontawesome": "^3.0.8",
@@ -24,6 +34,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.5",
+    "autoprefixer": "^10.5.4",
+    "postcss": "^8.5.26",
     "vite": "^5.3.1",
     "vite-ssg": "^0.23.8"
   }
