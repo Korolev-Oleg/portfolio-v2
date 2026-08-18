@@ -69,7 +69,7 @@
 
 @keyframes terminal-flow {
   0%   { transform: translate3d(10%, 0, 0); opacity: 1; }
-  100% { transform: translate3d(10%, -170vh, 0); opacity: 1; }
+  100% { transform: translate3d(10%, -230vh, 0); opacity: 1; }
 }
 
 .projects-canvas {
