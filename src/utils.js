@@ -2,7 +2,10 @@ import {loader} from "@/store/global.js";
 import translationStore from "@/store/global.js";
 
 export function syncLocale(translationStore) {
-  const userLanguage = navigator.language || navigator.userLanguage;
+  const testLanguage = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('lang')
+    : null;
+  const userLanguage = testLanguage || navigator.language || navigator.userLanguage || 'en';
   if (userLanguage.startsWith('ru')) {
     translationStore.currentLocale = 'ru';
   } else {

@@ -26,13 +26,13 @@ const nextAnchor = () => {
 onMounted(() => {
   updateProgress()
   window.addEventListener('scroll', updateProgress, {passive: true});
-  gsap.to('#scroll-down', {
-    duration: .8,
-    y: -10,
-    repeat: -1,
-    yoyo: true,
-    ease: "power1.inOut",
-  });
+  // gsap.to('#scroll-down', {
+  //   duration: .8,
+  //   y: -10,
+  //   repeat: -1,
+  //   yoyo: true,
+  //   ease: "power1.inOut",
+  // });
 });
 
 onUnmounted(() => {
@@ -42,10 +42,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <button id="scroll-down" type="button" @click="nextAnchor" :aria-label="progress === 100 ? 'Back to top' : `Scroll to next section, ${progress}% read`">
+  <!-- <button id="scroll-down" type="button" @click="nextAnchor" :aria-label="progress === 100 ? 'Back to top' : `Scroll to next section, ${progress}% read`">
     <ChevronDownIcon/>
     <span>{{ progress }}</span>%
-  </button>
+  </button> -->
 </template>
 
 <style scoped>

@@ -6,8 +6,7 @@ import {loadResources, syncLocale} from '@/utils.js';
 import LoadingScreen from "@/components/Service/LoadingScreen.vue";
 import ScrollBar from "@/components/Service/scrollBar.vue";
 import About from "@/components/Content/about.vue";
-import Portfolio from "@/components/Portfolio/portfolio.vue"
-import WebProjects from "@/components/WebProjects/WebProjects.vue";
+import ProjectsExperience from "@/components/ProjectsExperience/ProjectsExperience.vue";
 import Footer from "@/components/Footer/footer.vue";
 import Header from "@/components/Header/header.vue";
 
@@ -25,8 +24,7 @@ onMounted(async () => {
   <ScrollBar/>
   <Header/>
   <About/>
-  <WebProjects/>
-  <Portfolio/>
+  <ProjectsExperience/>
   <Footer/>
 </template>
 
@@ -34,12 +32,14 @@ onMounted(async () => {
 <style>
 body {
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 #app {
   padding: 0;
   background: var(--color-background);
   overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100vw;
   grid-template-columns: 1fr;
 }
