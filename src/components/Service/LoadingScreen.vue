@@ -1,35 +1,27 @@
 <script setup>
-import {onMounted, ref, watch} from 'vue';
+import {onMounted, onUnmounted, watch} from 'vue';
 import {loader} from "@/store/global.js";
-import NumberAnimation from "vue-number-animation";
 import {lockScroll, unlockScroll} from "@/components/Content/services.js";
 
-
-const loadingSpan = ref(null)
-const number = ref(null)
 
 onMounted(() => {
   lockScroll()
 })
 
-watch(loader.isLoading, (isLoading) => {
+watch(() => loader.isLoading, (isLoading) => {
   if (!isLoading) {
-    document.getElementById('loading-section').style.display = 'none'
     unlockScroll()
   }
 })
 
+onUnmounted(unlockScroll)
+
 </script>
 
 <template>
-  <div class="loading-screen" id="loading-section">
+  <div v-if="loader.isLoading" class="loading-screen" id="loading-section" role="status" aria-live="polite">
     <p>Loading...
-      <NumberAnimation
-          ref="number"
-          :to="loader.progress"
-          :format="(n)=>n.toFixed(0)"
-          duration=.5
-      />
+      <span>{{ loader.progress }}</span>%
     </p>
   </div>
 </template>

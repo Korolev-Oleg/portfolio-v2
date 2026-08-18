@@ -2,7 +2,10 @@ import {loader} from "@/store/global.js";
 import translationStore from "@/store/global.js";
 
 export function syncLocale(translationStore) {
-  const userLanguage = navigator.language || navigator.userLanguage;
+  const testLanguage = import.meta.env.DEV
+    ? new URLSearchParams(window.location.search).get('lang')
+    : null;
+  const userLanguage = testLanguage || navigator.language || navigator.userLanguage || 'en';
   if (userLanguage.startsWith('ru')) {
     translationStore.currentLocale = 'ru';
   } else {
@@ -25,23 +28,53 @@ export function isElementVisible(element) {
   );
 }
 
-export function loadResources(loadingProgressRef) {
+export async function loadResources() {
   const resources = document.querySelectorAll('img, link[rel="stylesheet"], video');
   const totalResources = resources.length;
   let loadedResources = 0;
 
-  const updateProgress = () => {
+  if (totalResources === 0) {
+    loader.progress = 100;
+    loader.isLoading = false;
+    return;
+  }
+
+  const updateProgress = (resolve) => {
     loadedResources++;
     const progress = Math.round((loadedResources / totalResources) * 100);
     loader.progress = progress;
+    if (loadedResources === totalResources) resolve();
   };
 
-  resources.forEach((resource) => {
-    resource.onload = updateProgress;
-    resource.onerror = updateProgress;
+  const waitForResources = new Promise((resolve) => {
+    resources.forEach((resource) => {
+      const isReady = resource.tagName === 'IMG'
+        ? resource.complete
+        : resource.tagName === 'VIDEO'
+          ? resource.readyState >= 1
+          : Boolean(resource.sheet);
+
+      if (isReady) {
+        updateProgress(resolve);
+        return;
+      }
+
+      let handled = false;
+      const done = () => {
+        if (handled) return;
+        handled = true;
+        updateProgress(resolve);
+      };
+      resource.addEventListener('load', done, {once: true});
+      resource.addEventListener('error', done, {once: true});
+      resource.addEventListener('loadedmetadata', done, {once: true});
+    });
   });
-  // loader.progress = 100
-  // loader.isLoading = false
+
+  const timeout = new Promise((resolve) => setTimeout(resolve, 4000));
+  await Promise.race([waitForResources, timeout]);
+  loader.progress = 100;
+  loader.isLoading = false;
 }
 
 export function initTranslations(translations) {

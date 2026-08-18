@@ -21,6 +21,17 @@ a,
     padding: 3px;
 }
 
+section,
+footer {
+    scroll-margin-top: 72px;
+}
+
+a:focus-visible,
+button:focus-visible {
+    outline: 3px solid #4f8cff;
+    outline-offset: 3px;
+}
+
 @media (hover: hover) {
     a svg:hover {
         filter: brightness(2) grayscale(1);
@@ -33,4 +44,3 @@ a,
     max-width: var(--max-container-width);
     margin: 0 auto;
 }
-

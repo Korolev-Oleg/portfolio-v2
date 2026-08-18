@@ -35,7 +35,6 @@
     overflow: hidden;
     display: block;
     z-index:10;
-    /*box-shadow: -2px 1px 20px 13px #fff*/
 }
 
 .head .flex {
@@ -98,4 +97,19 @@ img {
 .hidden-container{
     margin-left: 28px;
     min-width: 163px;
+}
+
+.skip-link {
+    position: fixed;
+    top: .5rem;
+    left: .5rem;
+    z-index: 1000;
+    transform: translateY(-200%);
+    background: var(--color-background);
+    color: var(--color-text);
+    padding: .75rem 1rem;
+}
+
+.skip-link:focus {
+    transform: translateY(0);
 }

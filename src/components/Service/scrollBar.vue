@@ -1,46 +1,51 @@
 <script setup>
-import {onMounted} from "vue";
+import {onMounted, onUnmounted, ref} from "vue";
 import ChevronDownIcon from "@/components/Service/ChevronDownIcon.vue";
 import gsap from "gsap";
 
+const progress = ref(0)
+const sections = ['about', 'web-projects', 'portfolio', 'contact']
+
+const updateProgress = () => {
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight
+  progress.value = scrollable > 0 ? Math.round((window.scrollY / scrollable) * 100) : 0
+}
+
 const nextAnchor = () => {
+  const next = sections
+    .map((id) => document.getElementById(id))
+    .find((section) => section && section.getBoundingClientRect().top > 80)
+
+  if (next) {
+    next.scrollIntoView({behavior: 'smooth'})
+  } else {
+    window.scrollTo({top: 0, behavior: 'smooth'})
+  }
 }
 
 onMounted(() => {
-  window.addEventListener('scroll', function () {
-    let scrollAmount = window.scrollY;
-    let documentHeight = document.documentElement.scrollHeight;
-    let windowHeight = window.innerHeight;
-    let scrollPercent = (scrollAmount / (documentHeight - windowHeight)) * 100;
-    let roundScroll = Math.round(scrollPercent);
-
-    // For scrollbar 2
-    let scrollBar = document.querySelector('#scroll-down');
-    if (scrollBar) {
-      let scrollBarSpan = scrollBar.querySelector('span');
-      if (scrollBarSpan) {
-        scrollBarSpan.textContent = roundScroll;
-      }
-    }
-  });
-
-  let scrollDown = document.getElementById('scroll-down');
-  gsap.to(scrollDown, {
-    duration: .8,
-    y: -10,
-    repeat: -1,
-    yoyo: true,
-    ease: "power1.inOut",
-  });
+  updateProgress()
+  window.addEventListener('scroll', updateProgress, {passive: true});
+  // gsap.to('#scroll-down', {
+  //   duration: .8,
+  //   y: -10,
+  //   repeat: -1,
+  //   yoyo: true,
+  //   ease: "power1.inOut",
+  // });
 });
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateProgress)
+  gsap.killTweensOf('#scroll-down')
+})
 </script>
 
 <template>
-  <div class="scrollBar"><span></span></div>
-  <div id="scroll-down" @click="nextAnchor()">
+  <!-- <button id="scroll-down" type="button" @click="nextAnchor" :aria-label="progress === 100 ? 'Back to top' : `Scroll to next section, ${progress}% read`">
     <ChevronDownIcon/>
-    <span>0</span>%
-  </div>
+    <span>{{ progress }}</span>%
+  </button> -->
 </template>
 
 <style scoped>
@@ -52,54 +57,15 @@ onMounted(() => {
   width: 100%;
   text-align: center;
   cursor: pointer;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  padding: 0;
 }
 
-.scrollBar {
-  position: fixed;
-  top: 0;
-  right: .5vw;
-  height: 0%;
-  width: 10px;
-  background: rgba(0, 0, 0, 0);
-  transition: height 200ms .1ms;
-  text-align: right;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  border-radius: 1em;
-  opacity: 0.6;
-  z-index: 200;
-
-  span {
-    z-index: 10000;
-    position: absolute;
-    bottom: 3px;
-    left: 2px;
-    font-size: 0.7em;
-    font-weight: 500;
-    display: inline-block;
-    text-align: left;
-    -webkit-transform: rotate(-90deg);
-    transform: rotate(-90deg);
-    -webkit-transform-origin: bottom right;
-    transform-origin: bottom left;
-
-    &::after {
-      content: "%";
-      font-size: 0.8em;
-      position: absolute;
-      right: -15px;
-      bottom: 4px;
-      font-weight: 700;
-      opacity: 0.4;
-    }
-  }
+#scroll-down svg {
+  display: block;
+  margin: 0 auto;
 }
 
-@media (max-width: 768px) {
-  .scrollBar {
-    right: .5rem;
-  }
-
-}
 </style>
