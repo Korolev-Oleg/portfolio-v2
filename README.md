@@ -7,7 +7,7 @@
 Moscow · remote work · full-time · available for business travel<br>
 Phone: +7 999 002-56-37 · Email: mail@okorolev.dev<br>
 Telegram: @okorolev_dev · GitHub: https://github.com/Korolev-Oleg<br>
-Setka: https://set.ki/kLYQDZX
+Linkedin: https://www.linkedin.com/pub/dir/Oleg/Korolev
 
 ## Professional profile
 

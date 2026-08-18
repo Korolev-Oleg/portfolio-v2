@@ -14,20 +14,29 @@ command -v npm >/dev/null 2>&1 || {
   exit 1
 }
 
+command -v git >/dev/null 2>&1 || {
+  echo "git is required."
+  exit 1
+}
+
 # Verify GitHub authentication.
 gh auth status --active --hostname github.com >/dev/null
 
-# Configure git authentication through GitHub CLI.
-gh auth setup-git --hostname github.com
-
 # Resolve repository from the current checkout.
 repo="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
-ssh_url="$(gh repo view --json sshUrl --jq '.sshUrl')"
+remote="$(gh repo view --json sshUrl --jq '.sshUrl')"
 
 echo "Deploying $repo"
+echo "Remote: $remote"
 
+# Build CURRENT checkout / branch.
 npm ci
 npm run build
+
+if [[ ! -d dist ]]; then
+  echo "dist/ was not generated."
+  exit 1
+fi
 
 deploy_dir="$(mktemp -d)"
 
@@ -38,23 +47,37 @@ cleanup() {
 
 trap cleanup EXIT
 
-# Ensure origin uses SSH.
-git remote set-url origin "$ssh_url"
+#
+# Read gh-pages directly from GitHub.
+# Do not rely on origin/gh-pages for lease safety.
+#
+remote_sha="$(
+  git ls-remote "$remote" refs/heads/gh-pages |
+  awk '{print $1}'
+)"
 
-# Fetch existing gh-pages if present.
-git fetch origin gh-pages 2>/dev/null || true
+if [[ -n "$remote_sha" ]]; then
+  echo "Current gh-pages: $remote_sha"
 
-if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-  git worktree add --detach "$deploy_dir" origin/gh-pages
+  # Fetch the exact commit we just observed.
+  git fetch --quiet "$remote" "$remote_sha"
+
+  # Build deployment worktree from current remote gh-pages.
+  git worktree add --detach "$deploy_dir" "$remote_sha"
 else
-  # Create an orphan deployment worktree from the current commit.
+  echo "gh-pages does not exist yet."
+
+  # Start from current HEAD only so Git can create a worktree,
+  # then immediately replace its history with an orphan branch.
   git worktree add --detach "$deploy_dir" HEAD
 
   git -C "$deploy_dir" checkout --orphan gh-pages
   git -C "$deploy_dir" rm -rf . >/dev/null 2>&1 || true
 fi
 
-# Remove previous deployment files while preserving worktree metadata.
+#
+# Replace deployment contents with dist/.
+#
 find "$deploy_dir" \
   -mindepth 1 \
   -maxdepth 1 \
@@ -63,7 +86,7 @@ find "$deploy_dir" \
 
 cp -R dist/. "$deploy_dir"/
 
-# Prevent GitHub Pages/Jekyll processing.
+# Disable Jekyll processing.
 touch "$deploy_dir/.nojekyll"
 
 git -C "$deploy_dir" add --all
@@ -76,10 +99,26 @@ fi
 git -C "$deploy_dir" commit \
   -m "deploy: update gh-pages"
 
-git -C "$deploy_dir" push \
-  "$ssh_url" \
-  HEAD:gh-pages \
-  --force-with-lease
+#
+# Push using an EXPLICIT lease.
+#
+# This is the important long-term fix.
+#
+if [[ -n "$remote_sha" ]]; then
+  echo "Pushing with lease against: $remote_sha"
+
+  git -C "$deploy_dir" push \
+    "$remote" \
+    HEAD:refs/heads/gh-pages \
+    --force-with-lease="refs/heads/gh-pages:$remote_sha"
+else
+  echo "Creating gh-pages"
+
+  git -C "$deploy_dir" push \
+    "$remote" \
+    HEAD:refs/heads/gh-pages \
+    --force-with-lease="refs/heads/gh-pages:"
+fi
 
 echo
 echo "Deployment complete:"
