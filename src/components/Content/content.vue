@@ -142,7 +142,7 @@ onUnmounted(() => {
 <style scoped>
 p {
   font-size: 16px;
-  margin: 25px 0;
+  margin: 9px 0;
   display: block;
 }
 

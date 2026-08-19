@@ -8,6 +8,7 @@ import FruitPoster from './assets/fruitprod-poster.webp'
 // import SteamPoster from './assets/steamsales-poster.webp'
 import GpuArkPoster from './assets/gpu-ark-poster.webp'
 import GpuArkVideo from '@/components/WebProjects/video/gpu-ark.mp4'
+import ZeissVideo from '@/components/WebProjects/video/zeiss.mp4'
 
 import TitanControlSlide1 from './assets/TitanControlSlide1.webp'
 import TitanControlSlide2 from './assets/TitanControlSlide2.webp'
@@ -46,6 +47,20 @@ export const projects = [
     },
     slides: [
       videoSlide(GpuArkVideo, GpuArkPoster, 'gpu-ark-slide-1'),
+    ],
+  },
+  {
+    id: 'zeiss',
+    titleKey: 'zeiss-title',
+    summaryKey: 'zeiss-summary',
+    kindKey: 'kind-web',
+    accent: 'rgb(0, 114, 239)',
+    icon: 'ZE',
+    links: {
+      preview: 'https://apple-vision-store.ru',
+    },
+    slides: [
+      videoSlide(ZeissVideo, GpuArkPoster, 'zeiss-slide-1'),
     ],
   },
   {

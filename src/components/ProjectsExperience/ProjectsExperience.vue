@@ -5,6 +5,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger'
 import translationStore from '@/store/global.js'
 import {syncLocale} from '@/utils.js'
 import translations from '@/translations/projectsExperienceTranslations.json'
+import terminal from '@/translations/terminal.json'
 import {projects, storyStops, webProjectStopCount} from './projectsData.js'
 import './projects-experience.css'
 
@@ -63,7 +64,7 @@ const activeProject = computed(() => activeStop.value.project)
 const activeSlide = computed(() => activeStop.value.slide)
 const activeProjectIndex = computed(() => activeStop.value.projectIndex)
 const activeSlideIndex = computed(() => activeStop.value.slideIndex)
-const terminalLines = computed(() => translations.en.terminal)
+const terminalLines = computed(() => terminal.lines)
 const storyStyle = computed(() => ({'--story-steps': storyStops.length}))
 const activeAccent = computed(() => activeProject.value.accent)
 const hasGithub = computed(() => Boolean(activeProject.value.links.github))
